@@ -5,30 +5,7 @@ using System.Collections.Generic;
 
 public class DetectObject : MonoBehaviour {
 
-    public class LookedAt {
-     
-        int id; //refering to the ObjectID class attached to GOs
-        float timeLookedAt = 0f;
-
-
-        public LookedAt(int objID, float initTime)
-        {
-            id = objID;
-            timeLookedAt = initTime;
-        }
-        public int GetID()
-        {
-            return id;
-        }
-        public float GetTime()
-        {
-            return timeLookedAt;
-        }
-        public void AddTime(float time)
-        {
-            timeLookedAt += time;
-        }
-    }
+    
     //when user looks at object, adds time while they're looking at it
     //when user looks at other object, adds object to list and starts adding time
     //when user looks back at object alreafy listed, references ID and adds new time amount
@@ -59,8 +36,12 @@ public class DetectObject : MonoBehaviour {
     int lastRayHitID=0;
     bool lastRayHitSomething = false;
     WriteToImage writeToImg;
+    DBHandler db;
 
-
+    public List<LookedAt> GetLookedAt()
+    {
+        return myLookedAts;
+    }
 
     void Start () {
         lastRayHit = new RaycastHit();
@@ -76,31 +57,30 @@ public class DetectObject : MonoBehaviour {
         myCam = GetComponent<Camera>();
         lastRotation = transform.rotation;
         writeToImg = GetComponent<WriteToImage>();
+        db = GetComponent<DBHandler>();
+        //db.Read(myLookedAts);
+        //print("la count" + myLookedAts.Count);
     }
 	
 	//look at something for a long enough period of time and you move towards it
     // when you want to recal, it will move you back in reverse order
 	void Update () {
 
-
-
         CollectObjects();
-      
-
 
         if (currentlylookingAtObj)
         {
             lastLookedAt.AddTime(Time.deltaTime); //looked at this object, for this amount of time at once
             FillBar(lastLookedAt.GetTime());
             writeToImg.WriteToPixel(lastRayHit);
-
             //print("c_obj: " +  availableObjects[myLookedAts[myLookedAts.Count-1].GetID()].name  + ", Ctime: " + myLookedAts[myLookedAts.Count-1].GetTime() + "total time: "+ availableObjects[lA.GetID()].GetComponent<ObjectID>().GetTotalTime());
+        } else if(lastLookedAt!=null) {
 
         }
-        else if(lastLookedAt!=null) {
-
+        if (Input.GetKey(KeyCode.Space))
+        {
+            db.Write(myLookedAts);
         }
-
 
         lastRotation = transform.rotation;
 
@@ -195,4 +175,8 @@ public class DetectObject : MonoBehaviour {
     {
         scroll.size = 0;
     }
+    //void writeAllToDB()
+    //{
+    //    db.Write(myLookedAts);
+    //}
 }
