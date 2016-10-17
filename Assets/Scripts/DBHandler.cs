@@ -4,47 +4,47 @@ using Mono.Data.Sqlite;
 using System.Data;
 using System;
 using System.Collections;
-using System.IO;  
+using System.IO;
 
-public class DBHandler : MonoBehaviour {
+public class DBHandler : MonoBehaviour
+{
     private string connString;
     string path;
+    IDbConnection dbconn;
+    IDbCommand dbCmd;
+    IDataReader reader;
+
     bool sessionChecked = false;
     int sessionNo;
 
     // Use this for initialization
-    void Start () {
+    void Start()
+    {
         //telling it that its a path and assigning path 
         path = Application.dataPath + "/ObjScanDatabase.db";
         connString = "URI=file:" + path;
-       // NewRead();
+        // NewRead();
         //Write(2, 4.2f);
     }
 
     public void Write(List<LookedAt> laList)
     {
-        if (!sessionChecked) {
-            Read();
-        }
-        string conn = "URI=file:" + Application.dataPath + "/ObjScanDatabase.s3db"; //Path to database.
-        using (IDbConnection dbconn = (IDbConnection)new SqliteConnection(connString))
+        if (!sessionChecked)
         {
-            dbconn.Open(); //Open connection to the database.
-            using (IDbCommand dbCmd = dbconn.CreateCommand())
-            {
-                string values="";
-                foreach (LookedAt la in laList)
-                {
-                    values += "(\"" + la.GetID() + "\",\"" + la.GetTime() + "\",\""+sessionNo+"\"),";
-                }
-                values = RemoveLastChar(values);
-                string queryStr = /*string.Format(*/"INSERT INTO ObjectsLookedAt(objID,Time, SessionID) VALUES"+values;
-                //give connection the command text
-                dbCmd.CommandText = queryStr;
-                dbCmd.ExecuteScalar();
-                dbconn.Close();
-            }
+            UpdateSession();
         }
+        string values = "";
+        foreach (LookedAt la in laList)
+        {
+            values += "(\"" + la.GetID() + "\",\"" + la.GetTime() + "\",\"" + sessionNo + "\"),";
+        }
+        values = RemoveLastChar(values);
+        string queryStr = "INSERT INTO ObjectsLookedAt(objID,Time, SessionID) VALUES" + values;
+        //give connection the command text
+        OpenDB(queryStr);       
+        dbCmd.ExecuteScalar();
+        CloseDB();
+
     }
     string RemoveLastChar(string str)
     {
@@ -57,40 +57,57 @@ public class DBHandler : MonoBehaviour {
         else { print("no str"); }
         return str;
     }
-    public void Read()
+    void OpenDB(string _queryStr)
+    {
+        dbconn = new SqliteConnection(connString);
+        dbconn.Open();
+        dbCmd = dbconn.CreateCommand();
+        dbCmd.CommandText = _queryStr;
+    }
+    void CloseDB()
+    {
+        //close the databse
+
+        dbCmd.Dispose();
+        dbCmd = null;
+        dbconn.Close();
+        dbconn = null;
+    }
+    public void UpdateSession()
     {
         if (File.Exists(path))
         {
             print("exists");
             //the using means that the database connection closes itself
-            using (IDbConnection dbconn = new SqliteConnection(connString))
-            {
-                dbconn.Open();
-                using (IDbCommand dbCmd = dbconn.CreateCommand())
-                {
-                    string queryStr = "SELECT * FROM ObjectsLookedAt WHERE objLookedAtID = (SELECT MAX(objLookedAtID) FROM ObjectsLookedAt)"; //get last row
-                                                                                                       //give connection the command text
-                    dbCmd.CommandText = queryStr;
+            //IDbConnection dbconn = new SqliteConnection(connString);
 
-                    //need to use reader to get info
-                    using (IDataReader reader = dbCmd.ExecuteReader())
-                    {
-                        reader.Read();
-                        sessionNo = reader.GetInt32(3)+1;
-                        sessionChecked = true;
-                        print("sess checked: " + sessionNo);
+            //dbconn.Open();
+            //IDbCommand dbCmd = dbconn.CreateCommand();
 
-                        while(reader.Read())
-                        {
-                            
-                        }
-                        dbconn.Close();
-                        reader.Close();
-                    }
-                }
-            }
+            string queryStr = "SELECT * FROM ObjectsLookedAt WHERE objLookedAtID = (SELECT MAX(objLookedAtID) FROM ObjectsLookedAt)"; //get last row
+                                                                                                                                      //give connection the command text
+                                                                                                                                      //dbCmd.CommandText = queryStr;
+            OpenDB(queryStr);
+            //need to use reader to get info
+            // OpenDB("SELECT * FROM ObjectsLookedAt WHERE objLookedAtID = (SELECT MAX(objLookedAtID) FROM ObjectsLookedAt)");
+            IDataReader reader = dbCmd.ExecuteReader();
+
+            reader.Read();
+            sessionNo = reader.GetInt32(3) + 1;
+            sessionChecked = true;
+
+
+            reader.Close();
+            reader = null;
+            CloseDB();
+            //dbCmd.Dispose();
+            //dbCmd = null;
+            //dbconn.Close();
+            //dbconn = null;
+
         }
-        else {
+        else
+        {
             print("no exist");
         }
 
