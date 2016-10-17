@@ -36,8 +36,13 @@ public class DBHandler : MonoBehaviour
         string values = "";
         foreach (LookedAt la in laList)
         {
-            values += "(\"" + la.GetID() + "\",\"" + la.GetTime() + "\",\"" + sessionNo + "\"),";
+            if (la.WrittenToDB == false) { 
+                values += "(\"" + la.GetID() + "\",\"" + la.GetTime() + "\",\"" + sessionNo + "\"),";
+                la.WrittenToDB = true;
+            }
         }
+        if (values == "")
+            return;
         values = RemoveLastChar(values);
         string queryStr = "INSERT INTO ObjectsLookedAt(objID,Time, SessionID) VALUES" + values;
         //give connection the command text
