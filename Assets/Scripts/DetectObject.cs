@@ -18,7 +18,9 @@ public class DetectObject : MonoBehaviour {
     Image img;
 
     [SerializeField] Material redMat;
-    [SerializeField] Material greenMat; 
+    [SerializeField] Material greenMat;
+    [SerializeField]
+    Material lRendMat;
 
     List<ObjectID> availableObjects;
     List<LookedAt> myLookedAts;
@@ -37,6 +39,9 @@ public class DetectObject : MonoBehaviour {
     bool lastRayHitSomething = false;
     WriteToImage writeToImg;
     DBHandler db;
+    List<LookedAt>[] sessions;
+
+    List<LineRenderer> rends;
 
     public List<LookedAt> GetLookedAt()
     {
@@ -44,6 +49,7 @@ public class DetectObject : MonoBehaviour {
     }
 
     void Start () {
+
         lastRayHit = new RaycastHit();
         availableObjects = new List<ObjectID>();
         availableObjects.AddRange(availableObjectsParent.GetComponentsInChildren<ObjectID>());
@@ -58,14 +64,28 @@ public class DetectObject : MonoBehaviour {
         lastRotation = transform.rotation;
         writeToImg = GetComponent<WriteToImage>();
         db = GetComponent<DBHandler>();
+        sessions = new List<LookedAt>[db.GetSessionNo()]; //initing the array of sessions - is set bc a session can only added with another play
+        print(sessions.Length);
         //db.Read(myLookedAts);
         //print("la count" + myLookedAts.Count);
     }
-	
-	//look at something for a long enough period of time and you move towards it
-    // when you want to recal, it will move you back in reverse order
-	void Update () {
 
+    //look at something for a long enough period of time and you move towards it
+    // when you want to recal, it will move you back in reverse order
+    void OnGUI()
+    {
+        if (Event.current.type == EventType.keyDown)
+        {
+            int curKey = Event.current.keyCode - KeyCode.Alpha1 + 1;
+            if (curKey > -1 && curKey < 10)
+            {
+                print("pressed " + curKey);
+                GetSession(curKey);
+            }
+
+        }
+    }
+	void Update () {
         CollectObjects();
 
         if (currentlylookingAtObj)
@@ -77,11 +97,11 @@ public class DetectObject : MonoBehaviour {
         } else if(lastLookedAt!=null) {
 
         }
+
         if (Input.GetKey(KeyCode.Space))
         {
             db.Write(myLookedAts);
         }
-
         lastRotation = transform.rotation;
 
 	}
@@ -116,7 +136,7 @@ public class DetectObject : MonoBehaviour {
                     if (lookingAtTimer > hasLookedAtDuration)
                     {
                         //add to the amount of times the object has been looked at
-                        myLookedAts.Add(new LookedAt(lastRayHitID, lookingAtTimer));
+                        myLookedAts.Add(new LookedAt(lastRayHitID, lookingAtTimer, lastRayHit.point));
                         lastLookedAt = myLookedAts[myLookedAts.Count - 1]; //the newest lookAt
                         currentlylookingAtObj = true;
                         //print("all: " + Resources.FindObjectsOfTypeAll<Material>().Length);
@@ -158,13 +178,64 @@ public class DetectObject : MonoBehaviour {
         }
     }
 
-    void DrawThroughObjects()
+    void DrawThroughObjects(int _sessionID)
     {
-		LineRenderer rend = gameObject.AddComponent<LineRenderer>();
-		rend.material = greenMat;
-		rend.SetColors (Color.cyan, Color.black);
-		rend.SetPosition (0, availableObjects [myLookedAts.Count - 1].transform.position);
-		rend.SetPosition (1, availableObjects [myLookedAts.Count - 2].transform.position);
+        if (rends != null)
+        {
+            print("remove rends");
+            foreach (LineRenderer lr in rends)
+            {
+                Destroy(lr.gameObject);
+            }
+        }
+        rends = new List<LineRenderer>();
+
+        //rend.SetPosition (0, availableObjects [myLookedAts.Count - 1].);
+        int sl = sessions[_sessionID].Count;
+        for (int i = 0; i < sl-1; i++) //minus 1 bc want to end with the last line ending at the last position
+        {
+            GameObject go = new GameObject("rendPar " + i);
+            LineRenderer lRend = go.AddComponent<LineRenderer>();
+            rends.Add(lRend);
+            for (int j = 0; j < 2; j++) //use set vertex count to get around all of this
+            {
+                print("position " + (i + j)+ "alg "+ (sl - (sl - i - j)));
+                //print("position " + (i + j) + " is " + sessions[_sessionID][sl - (sl + i + j)].GetHitPoint());
+                lRend.SetPosition(j, sessions[_sessionID][sl - (sl - i-j)].GetHitPoint()); //going from 0 to max length of the session
+                if (j > 0)
+                {
+                    lRend.material = lRendMat;
+                    lRend.SetColors(Color.blue, Color.red);
+                    lRend.SetWidth((sessions[_sessionID][sl - (sl - i)].GetTime() +1)/10, (sessions[_sessionID][sl - (sl - i - j)].GetTime() + 1) / 10);
+                }
+
+            }
+
+        }
+
+
+        //color is time looked at object total
+        //
+
+    }
+    void GetSession(int sessionID)
+    {
+        print("arr length " + sessions.Length);
+        //in future this will be dynamic length so that current sessions can be drawn
+        if (sessionID >= sessions.Length)
+        {
+            print("noo session leng" + sessions.Length);
+            return;
+        }
+        if (sessions[sessionID] == null)
+        {
+            //use db to populate list
+            db.GetSession(sessionID, sessions);
+        }
+        print("session "+sessionID + " amount: "+sessions[sessionID].Count);
+        //list of sessions (dyanmic), each item is a list of lookats
+        //when player hits number, then that session list is grabbed if not already there
+        DrawThroughObjects(sessionID);
     }
     //build reflection of player as 
     void FillBar(float amount)
@@ -175,8 +246,5 @@ public class DetectObject : MonoBehaviour {
     {
         scroll.size = 0;
     }
-    //void writeAllToDB()
-    //{
-    //    db.Write(myLookedAts);
-    //}
+
 }

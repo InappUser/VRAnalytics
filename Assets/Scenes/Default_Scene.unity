@@ -588,8 +588,9 @@ MonoBehaviour:
   availableObjectsParent: {fileID: 2140205953}
   scroll: {fileID: 1287580321}
   img: {fileID: 1411872563}
-  redMat: {fileID: 0}
-  greenMat: {fileID: 0}
+  redMat: {fileID: 2100000, guid: 625e4e9b0f293c842a52fe4079697b7b, type: 2}
+  greenMat: {fileID: 2100000, guid: 4d04aaac8a693fa4f9bc9d0ce5c63f9d, type: 2}
+  lRendMat: {fileID: 2100000, guid: eaec5b65f7e7cc94e909b6815acc863a, type: 2}
 --- !u!114 &374290857
 MonoBehaviour:
   m_ObjectHideFlags: 0
