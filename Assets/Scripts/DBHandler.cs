@@ -8,7 +8,8 @@ using System.IO;
 
 public class DBHandler : MonoBehaviour
 {
-    private string connString;
+	Hashtable objIDName; //populated from db for checking if obj looked at is already in db, using its name
+    string connString;
     string path;
     IDbConnection dbconn;
     IDbCommand dbCmd;
@@ -21,13 +22,20 @@ public class DBHandler : MonoBehaviour
     // Use this for initialization
     void Awake()
     {
+		objIDName = new Hashtable ();
         //telling it that its a path and assigning path 
         path = Application.dataPath + "/ObjScanDatabase.db";
         connString = "URI=file:" + path;
         UpdateSession();
+		PopulateObjIDName ();
     }
     public int GetSessionNo() { return sessionNo; }
-    public bool SavedCurSess() { return savedCurrentSession; }
+    public bool HasSavedCurSess() { return savedCurrentSession; }
+	public int GetObjID(string objName)
+	{
+		//check hashtable of strings and IDs to see if already in list, increment if not 
+		return 10;		
+	}
     public void Write(List<LookedAt> laList)
     {
         if (!sessionChecked)
@@ -35,8 +43,12 @@ public class DBHandler : MonoBehaviour
             UpdateSession();
         }
         string values = "";
+		int latestObjID = -1;
         foreach (LookedAt la in laList)
         {
+			if (la.GetID () > latestObjID) { //do I need to do this if I have hastable for them anyway - should I even have a hastable?
+				latestObjID = la.GetID (); //get latest ID
+			}
             if (la.WrittenToDB == false) { 
                 values += "(\"" + la.GetID() + "\",\"" + la.GetTime() + "\",\" " + 
                     la.GetHitPoint().ToString()
@@ -55,7 +67,16 @@ public class DBHandler : MonoBehaviour
         OpenDB(queryStr);       
         dbCmd.ExecuteScalar();
         savedCurrentSession=true; // so that can access saved info from within same session/create more sessions
+		print("latestID = "+latestObjID);
+		//add new entries to objIDName if ibj has not been looked at yet
+//		queryStr = "SELECT * FROM ObjIDName WHERE ObjID = (SELECT MAX(ObjID) FROM ObjIDName)";
+//		OpenDB(queryStr);
+//		IDataReader reader = dbCmd.ExecuteReader();
+//		reader.Read();
+//		int lastID = reader.GetInt32 (0);
+
         CloseDB();
+
 
     }
     string RemoveLastChar(string str)
@@ -140,6 +161,19 @@ public class DBHandler : MonoBehaviour
             print("no exist");
         }
     }
+
+	void PopulateObjIDName()
+	{
+		string queryStr = "SELECT * FROM ObjIDName";
+		OpenDB (queryStr);
+		IDataReader read = dbCmd.ExecuteReader ();
+		while (reader.Read ()) {
+			objIDName.Add(reader.GetString(1), reader.GetInt32(0));		
+		}
+		print ("hashtable amt " + objIDName.Count);
+		CloseDB ();
+
+	}
     //void Read()
     //{
 

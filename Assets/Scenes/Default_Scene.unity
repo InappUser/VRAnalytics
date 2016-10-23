@@ -37,7 +37,7 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 0}
-  m_IndirectSpecularColor: {r: 0.44692492, g: 0.4967869, b: 0.57508546, a: 1}
+  m_IndirectSpecularColor: {r: 0.44692534, g: 0.49678725, b: 0.57508564, a: 1}
 --- !u!157 &3
 LightmapSettings:
   m_ObjectHideFlags: 0
@@ -389,6 +389,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   scaleMod: 2
+  id: 2
 --- !u!1 &316974010
 GameObject:
   m_ObjectHideFlags: 0
@@ -588,8 +589,8 @@ MonoBehaviour:
   availableObjectsParent: {fileID: 2140205953}
   scroll: {fileID: 1287580321}
   img: {fileID: 1411872563}
-  redMat: {fileID: 2100000, guid: 625e4e9b0f293c842a52fe4079697b7b, type: 2}
-  greenMat: {fileID: 2100000, guid: 4d04aaac8a693fa4f9bc9d0ce5c63f9d, type: 2}
+  redMat: {fileID: 2100000, guid: 14e93c3476b1ce14caac9d85f75c61df, type: 2}
+  greenMat: {fileID: 2100000, guid: 69746c7ef2b4de84eba5a3b6c7d491fe, type: 2}
   lRendMat: {fileID: 2100000, guid: eaec5b65f7e7cc94e909b6815acc863a, type: 2}
 --- !u!114 &374290857
 MonoBehaviour:
@@ -650,6 +651,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   scaleMod: 2
+  id: 1
 --- !u!114 &449439678
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2459,6 +2461,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   scaleMod: 2
+  id: 0
 --- !u!114 &1814251154
 MonoBehaviour:
   m_ObjectHideFlags: 0

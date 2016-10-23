@@ -5,6 +5,7 @@ public class ObjectID : MonoBehaviour {
 
     [SerializeField]
     float scaleMod = 2;
+	[SerializeField]
     int id;
     int amountLookedAt;
     float totalTimeLookedAt;

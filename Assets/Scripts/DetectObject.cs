@@ -19,8 +19,7 @@ public class DetectObject : MonoBehaviour {
 
     [SerializeField] Material redMat;
     [SerializeField] Material greenMat;
-    [SerializeField]
-    Material lRendMat;
+    [SerializeField] Material lRendMat;
 
     List<ObjectID> availableObjects;
     List<LookedAt> myLookedAts;
@@ -65,7 +64,7 @@ public class DetectObject : MonoBehaviour {
         writeToImg = GetComponent<WriteToImage>();
         db = GetComponent<DBHandler>();
         sessions = new List<LookedAt>[db.GetSessionNo()]; //initing the array of sessions - is set bc a session can only added with another play
-        print(sessions.Length);
+        //print("sess len"+sessions.Length);
         //db.Read(myLookedAts);
         //print("la count" + myLookedAts.Count);
     }
@@ -113,7 +112,11 @@ public class DetectObject : MonoBehaviour {
             lastRayHitSomething = Physics.Raycast(ray, out lastRayHit, 100f);
             if (lastRayHitSomething)
             {
-                lastRayHitID = lastRayHit.transform.GetComponent<ObjectID>().ID;
+				if (lastRayHit.transform.GetComponent<ObjectID> () != null) {
+					lastRayHitID = lastRayHit.transform.GetComponent<ObjectID> ().ID;
+				} else {
+					lastRayHit.transform.gameObject.AddComponent<ObjectID> ().ID = db.GetObjID (lastRayHit.transform.name);
+				}
             }
 
             //if (myLookedAts.Count > 0) lastLookedAt = myLookedAts[myLookedAts.Count - 1];
